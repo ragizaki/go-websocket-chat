@@ -21,8 +21,20 @@ type CreateUserResponse struct {
 	Email    string `json:"email" db:"email"`
 }
 
+type LoginRequest struct {
+	Email    string `json:"email" db:"email"`
+	Password string `json:"password" db:"password"`
+}
+
+type LoginResponse struct {
+	accessToken string
+	ID          string `json:"id" db:"id"`
+	Username    string `json:"username" db:"username"`
+}
+
 type Repository interface {
 	CreateUser(context.Context, *User) (*User, error)
+	GetUserByEmail(context.Context, string) (*User, error)
 }
 
 type Service interface {
