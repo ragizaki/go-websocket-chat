@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"fmt"
 	"server/config"
 	"server/util"
 	"strconv"
@@ -71,11 +70,6 @@ func (s *service) Login(ctx context.Context, req *LoginRequest) (*LoginResponse,
 
 	err = util.ComparePassword(user.Password, req.Password)
 	if err != nil {
-		return nil, err
-	}
-
-	if err := config.LoadEnv(); err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
