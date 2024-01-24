@@ -64,3 +64,8 @@ func (handler *Handler) Login(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, loginRes)
 }
+
+func (handler *Handler) Logout(ctx *gin.Context) {
+	ctx.SetCookie("jwt", "", -1, "", "", false, true)
+	ctx.JSON(http.StatusOK, gin.H{"message": "Successfully logged out"})
+}
