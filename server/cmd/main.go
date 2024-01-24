@@ -5,6 +5,7 @@ import (
 	"server/config"
 	"server/db"
 	"server/internal/user"
+	"server/internal/websocket"
 	"server/router"
 )
 
@@ -27,7 +28,10 @@ func main() {
 	userService := user.NewUserService(userRepository)
 	userHandler := user.NewHandler(userService)
 
+	webSocketHub := websocket.NewHub()
+	webSocketHandler := websocket.NewHandler(webSocketHub)
+
 	// create router and start server
-	r := router.NewRouter(userHandler)
+	r := router.NewRouter(userHandler, webSocketHandler)
 	router.StartRouter("0.0.0.0:8080", r)
 }
