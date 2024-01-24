@@ -8,10 +8,10 @@ import (
 )
 
 type DBTX interface {
-	Exec(context.Context, string, ...interface{}) (sql.Result, error)
-	Prepare(context.Context, string) (*sql.Stmt, error)
+	ExecContext(context.Context, string, ...interface{}) (sql.Result, error)
+	PrepareContext(context.Context, string) (*sql.Stmt, error)
 	QueryContext(context.Context, string, ...interface{}) (*sql.Rows, error)
-	QueryRow(context.Context, string, ...interface{}) *sql.Row
+	QueryRowContext(context.Context, string, ...interface{}) *sql.Row
 }
 
 type repository struct {
@@ -25,11 +25,11 @@ func NewRepository(db DBTX) Repository {
 func (r *repository) CreateUser(ctx context.Context, user *User) (*User, error) {
 	var lastInsertedId int64
 	createUserQuery := `INSERT INTO users (username, password, email) VALUES ($1, $2, $3) RETURNING id`
-	err := r.db.QueryRow(ctx, createUserQuery, user.Username, user.Password, user.Email).Scan(&lastInsertedId)
+	err := r.db.QueryRowContext(ctx, createUserQuery, user.Username, user.Password, user.Email).Scan(&lastInsertedId)
 
 	if err != nil {
 		return nil, err
 	}
-	user.ID = lastInsertedId
+	user.ID = int64(lastInsertedId)
 	return user, nil
 }
