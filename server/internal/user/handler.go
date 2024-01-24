@@ -2,6 +2,8 @@ package user
 
 import (
 	"net/http"
+	"server/config"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
@@ -23,6 +25,7 @@ func (handler *Handler) CreateUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
 	userRes, err := handler.Service.CreateUser(ctx.Request.Context(), &userReq)
 	if err != nil {
 		pqErr, ok := err.(*pq.Error)
@@ -34,4 +37,30 @@ func (handler *Handler) CreateUser(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, userRes)
+}
+
+func (handler *Handler) Login(ctx *gin.Context) {
+	var loginReq LoginRequest
+	if err := ctx.ShouldBindJSON(&loginReq); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	loginRes, err := handler.Service.Login(ctx.Request.Context(), &loginReq)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	maxAge, _ := strconv.Atoi(config.GetEnv("JWT_MAX_AGE"))
+	domain := config.GetEnv("JWT_DOMAIN")
+
+	ctx.SetCookie("jwt", loginRes.accessToken, maxAge, "/", domain, false, true)
+
+	loginRes = &LoginResponse{
+		ID:       loginRes.ID,
+		Username: loginRes.Username,
+	}
+
+	ctx.JSON(http.StatusOK, loginRes)
 }
