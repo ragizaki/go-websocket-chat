@@ -39,4 +39,5 @@ type Repository interface {
 
 type Service interface {
 	CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
+	Login(context.Context, *LoginRequest) (*LoginResponse, error)
 }
