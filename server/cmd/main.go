@@ -28,10 +28,12 @@ func main() {
 	userService := user.NewUserService(userRepository)
 	userHandler := user.NewHandler(userService)
 
-	webSocketHub := websocket.NewHub()
-	webSocketHandler := websocket.NewHandler(webSocketHub)
+	websocketHub := websocket.NewHub()
+	websocketHandler := websocket.NewHandler(websocketHub)
+
+	go websocketHub.Run()
 
 	// create router and start server
-	r := router.NewRouter(userHandler, webSocketHandler)
+	r := router.NewRouter(userHandler, websocketHandler)
 	router.StartRouter("0.0.0.0:8080", r)
 }
