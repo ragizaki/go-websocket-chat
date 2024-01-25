@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -24,7 +25,13 @@ func (handler *Handler) CreateRoom(ctx *gin.Context) {
 		return
 	}
 
-	handler.hub.AddRoom(req.ID, req.Name)
+	if handler.hub.CheckRoomExists(req.Name) {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Room already exists"})
+		return
+	}
+
+	roomId := uuid.New().String()
+	handler.hub.AddRoom(roomId, req.Name, req.Owner)
 
 	ctx.JSON(http.StatusOK, req)
 }
@@ -78,8 +85,9 @@ func (handler *Handler) GetRooms(ctx *gin.Context) {
 
 	for _, room := range handler.hub.Rooms {
 		rooms = append(rooms, RoomResponse{
-			ID:   room.ID,
-			Name: room.Name,
+			ID:    room.ID,
+			Name:  room.Name,
+			Owner: room.Owner,
 		})
 	}
 	ctx.JSON(http.StatusOK, rooms)

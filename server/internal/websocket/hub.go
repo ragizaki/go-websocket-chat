@@ -3,11 +3,13 @@ package websocket
 type Room struct {
 	ID      string             `json:"id"`
 	Name    string             `json:"name"`
+	Owner   string             `json:"owner"`
 	Clients map[string]*Client `json:"clients"`
 }
 
 type Hub struct {
 	Rooms       map[string]*Room
+	RoomNames   map[string]struct{}
 	Subscribe   chan *Client
 	Unsubscribe chan *Client
 	Broadcast   chan *Message
@@ -16,20 +18,30 @@ type Hub struct {
 func NewHub() *Hub {
 	return &Hub{
 		Rooms:       make(map[string]*Room),
+		RoomNames:   make(map[string]struct{}),
 		Subscribe:   make(chan *Client),
 		Unsubscribe: make(chan *Client),
 		Broadcast:   make(chan *Message, 5),
 	}
 }
 
-func (hub *Hub) AddRoom(id string, name string) {
+func (hub *Hub) CheckRoomExists(name string) bool {
+	if _, exists := hub.RoomNames[name]; exists {
+		return true
+	}
+	return false
+}
+
+func (hub *Hub) AddRoom(id string, name string, owner string) {
 	room := &Room{
 		ID:      id,
 		Name:    name,
+		Owner:   owner,
 		Clients: make(map[string]*Client),
 	}
 
 	hub.Rooms[id] = room
+	hub.RoomNames[name] = struct{}{}
 }
 
 func handleSubscribe(hub *Hub, client *Client) {
@@ -64,40 +76,15 @@ func handleBroadcast(hub *Hub, message *Message) {
 		}
 	}
 }
-func (h *Hub) Run() {
+func (hub *Hub) Run() {
 	for {
 		select {
-		case cl := <-h.Subscribe:
-			if _, ok := h.Rooms[cl.RoomID]; ok {
-				r := h.Rooms[cl.RoomID]
-
-				if _, ok := r.Clients[cl.ID]; !ok {
-					r.Clients[cl.ID] = cl
-				}
-			}
-		case cl := <-h.Unsubscribe:
-			if _, ok := h.Rooms[cl.RoomID]; ok {
-				if _, ok := h.Rooms[cl.RoomID].Clients[cl.ID]; ok {
-					if len(h.Rooms[cl.RoomID].Clients) != 0 {
-						h.Broadcast <- &Message{
-							Content:  "user left the chat",
-							RoomID:   cl.RoomID,
-							Username: cl.Username,
-						}
-					}
-
-					delete(h.Rooms[cl.RoomID].Clients, cl.ID)
-					close(cl.Message)
-				}
-			}
-
-		case m := <-h.Broadcast:
-			if _, ok := h.Rooms[m.RoomID]; ok {
-
-				for _, cl := range h.Rooms[m.RoomID].Clients {
-					cl.Message <- m
-				}
-			}
+		case client := <-hub.Subscribe:
+			handleSubscribe(hub, client)
+		case client := <-hub.Unsubscribe:
+			handleUnsubscribe(hub, client)
+		case message := <-hub.Broadcast:
+			handleBroadcast(hub, message)
 		}
 	}
 }
