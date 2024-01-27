@@ -35,5 +35,5 @@ func main() {
 
 	// create router and start server
 	r := router.NewRouter(userHandler, websocketHandler)
-	router.StartRouter("0.0.0.0:8080", r)
+	router.StartRouter(config.GetEnv("SERVER_URL"), r)
 }
