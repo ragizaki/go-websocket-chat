@@ -59,7 +59,7 @@ export default function Home() {
   const joinRoom = async (roomId: string) => {
     const { id, username } = user;
     const ws = new WebSocket(
-      `${WS_URL}/api/ws/rooms/${roomId}?userId=${id}&username=${username}`
+      `${WS_URL}/api/ws/rooms/${roomId}/join?userId=${id}&username=${username}`
     );
     ws.onopen = () => {
       setConnection(ws);
