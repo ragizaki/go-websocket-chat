@@ -5,6 +5,11 @@ type CreateRoomRequest struct {
 	Owner string `json:"owner"`
 }
 
+type CreateRoomResponse struct {
+	Name string `json:"name"`
+	ID   string `json:"id"`
+}
+
 type RoomResponse struct {
 	ID    string `json:"id"`
 	Name  string `json:"name"`

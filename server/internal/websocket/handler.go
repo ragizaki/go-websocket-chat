@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -33,7 +34,12 @@ func (handler *Handler) CreateRoom(ctx *gin.Context) {
 	roomId := uuid.New().String()
 	handler.hub.AddRoom(roomId, req.Name, req.Owner)
 
-	ctx.JSON(http.StatusOK, req)
+	res := CreateRoomResponse{
+		ID:   roomId,
+		Name: req.Name,
+	}
+
+	ctx.JSON(http.StatusOK, res)
 }
 
 var upgrader = websocket.Upgrader{
@@ -45,6 +51,7 @@ var upgrader = websocket.Upgrader{
 }
 
 func (handler *Handler) JoinRoom(ctx *gin.Context) {
+	fmt.Println("Room trying to join")
 	connection, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -52,8 +59,8 @@ func (handler *Handler) JoinRoom(ctx *gin.Context) {
 	}
 
 	roomId := ctx.Param("roomId")
-	clientId := ctx.Param("userId")
-	username := ctx.Param("username")
+	clientId := ctx.Query("userId")
+	username := ctx.Query("username")
 
 	client := &Client{
 		Conn:     connection,
