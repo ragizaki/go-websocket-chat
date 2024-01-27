@@ -24,19 +24,19 @@ func NewRouter(userHandler *user.Handler, websocketHandler *websocket.Handler) *
 
 	// define prefixes for routes (/api/auth and /api/ws)
 	api := router.Group("/api")
-	authRouter := api.Group("/auth")
-	wsRouter := api.Group("/ws")
 
 	// user routes
+	authRouter := api.Group("/auth")
 	authRouter.POST("/signup", userHandler.CreateUser)
 	authRouter.POST("/login", userHandler.Login)
 	authRouter.GET("/logout", userHandler.Logout)
 
 	// websocket routes
+	wsRouter := api.Group("/ws")
 	wsRouter.POST("/rooms", websocketHandler.CreateRoom)
-	wsRouter.GET("/rooms/join/:roomId", websocketHandler.JoinRoom)
 	wsRouter.GET("/rooms", websocketHandler.GetRooms)
-	wsRouter.GET("/clients/:roomId", websocketHandler.GetClientsInRoom)
+	router.GET("/api/ws/rooms/:roomId/join", websocketHandler.JoinRoom)
+	wsRouter.GET("/rooms/:roomId/clients", websocketHandler.GetClientsInRoom)
 
 	return router
 }
